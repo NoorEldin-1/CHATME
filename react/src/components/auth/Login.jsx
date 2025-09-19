@@ -9,6 +9,10 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const loading = useSelector((state) => state.auth.loginLoading, shallowEqual);
+  const errorMsg = useSelector(
+    (state) => state.auth.loginErrorMsg,
+    shallowEqual
+  );
   const [info, setInfo] = useState({
     username: "",
     password: "",
@@ -29,12 +33,15 @@ const Login = () => {
           login
         </h3>
         <div className="flex flex-col gap-6 my-3">
-          {/* <p className="text-red-700 font-bold text-sm capitalize text-center">
-            credentials error
-          </p> */}
-          <p className="text-white/50 font-bold text-xs capitalize text-center">
-            please enter your credentials to login.
-          </p>
+          {errorMsg ? (
+            <p className="text-red-700 font-bold text-sm capitalize text-center">
+              {errorMsg}
+            </p>
+          ) : (
+            <p className="text-white/50 font-bold text-xs capitalize text-center">
+              please enter your credentials to login.
+            </p>
+          )}
           <div className="flex flex-col gap-2">
             <input
               value={info.username}

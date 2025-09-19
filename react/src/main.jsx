@@ -5,6 +5,8 @@ import { BrowserRouter } from "react-router";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
 
+export const BASE_URL = `http://127.0.0.1:8000/api/`;
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
