@@ -3,7 +3,7 @@ import BgAnimation from "../library/BgAnimation";
 import { IoMdLogIn } from "react-icons/io";
 import { CgLogIn } from "react-icons/cg";
 import { FaArrowRight } from "react-icons/fa";
-import { Routes, Route, useNavigate } from "react-router";
+import { Routes, Route, useNavigate, Navigate } from "react-router";
 import Login from "../auth/Login";
 import Signup from "../auth/Signup";
 
@@ -60,6 +60,7 @@ const Landing = () => {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
   );

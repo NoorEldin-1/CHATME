@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router";
 import Button from "../library/Button";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleSignup } from "../../store/authSlice";
 import Loader from "../library/Loader";
 
-const Signup = () => {
+const Signup = React.memo(() => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const loading = useSelector((state) => state.auth.signupLoading);
@@ -22,6 +22,7 @@ const Signup = () => {
     password: "text-white/50",
     confirmPassword: "text-white/50",
   });
+
   const signup = useCallback(() => {
     if (
       info.username.trim().length < 4 ||
@@ -32,6 +33,79 @@ const Signup = () => {
       return;
     dispatch(handleSignup({ info }));
   }, [dispatch, info]);
+
+  const handleUsernameChange = useCallback(
+    (e) => {
+      setInfo({ ...info, username: e.target.value });
+      if (e.target.value.trim().length >= 4) {
+        setValidate((prev) => ({
+          ...prev,
+          username: "text-green-500",
+        }));
+      } else {
+        setValidate((prev) => ({
+          ...prev,
+          username: "text-red-500",
+        }));
+      }
+    },
+    [info]
+  );
+
+  const handleFullNameChange = useCallback(
+    (e) => {
+      setInfo({ ...info, fullName: e.target.value });
+      if (e.target.value.trim().length >= 4) {
+        setValidate((prev) => ({
+          ...prev,
+          fullName: "text-green-500",
+        }));
+      } else {
+        setValidate((prev) => ({
+          ...prev,
+          fullName: "text-red-500",
+        }));
+      }
+    },
+    [info]
+  );
+
+  const handlePasswordChange = useCallback(
+    (e) => {
+      setInfo({ ...info, password: e.target.value });
+      if (e.target.value.trim().length >= 8) {
+        setValidate((prev) => ({
+          ...prev,
+          password: "text-green-500",
+        }));
+      } else {
+        setValidate((prev) => ({
+          ...prev,
+          password: "text-red-500",
+        }));
+      }
+    },
+    [info]
+  );
+
+  const handleConfirmPasswordChange = useCallback(
+    (e) => {
+      setInfo({ ...info, confirmPassword: e.target.value });
+      if (e.target.value === info.password) {
+        setValidate((prev) => ({
+          ...prev,
+          confirmPassword: "text-green-500",
+        }));
+      } else {
+        setValidate((prev) => ({
+          ...prev,
+          confirmPassword: "text-red-500",
+        }));
+      }
+    },
+    [info]
+  );
+
   return (
     <div className="relative grid place-content-center flex-1 select-none">
       <form
@@ -58,20 +132,7 @@ const Signup = () => {
             <input
               type="text"
               value={info.username}
-              onChange={(e) => {
-                setInfo({ ...info, username: e.target.value });
-                if (e.target.value.trim().length >= 4) {
-                  setValidate((prev) => ({
-                    ...prev,
-                    username: "text-green-500",
-                  }));
-                } else {
-                  setValidate((prev) => ({
-                    ...prev,
-                    username: "text-red-500",
-                  }));
-                }
-              }}
+              onChange={handleUsernameChange}
               placeholder="username"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
@@ -83,20 +144,7 @@ const Signup = () => {
             <input
               type="text"
               value={info.fullName}
-              onChange={(e) => {
-                setInfo({ ...info, fullName: e.target.value });
-                if (e.target.value.trim().length >= 4) {
-                  setValidate((prev) => ({
-                    ...prev,
-                    fullName: "text-green-500",
-                  }));
-                } else {
-                  setValidate((prev) => ({
-                    ...prev,
-                    fullName: "text-red-500",
-                  }));
-                }
-              }}
+              onChange={handleFullNameChange}
               placeholder="full name"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
@@ -109,20 +157,7 @@ const Signup = () => {
               type="password"
               autoComplete="new-password"
               value={info.password}
-              onChange={(e) => {
-                setInfo({ ...info, password: e.target.value });
-                if (e.target.value.trim().length >= 8) {
-                  setValidate((prev) => ({
-                    ...prev,
-                    password: "text-green-500",
-                  }));
-                } else {
-                  setValidate((prev) => ({
-                    ...prev,
-                    password: "text-red-500",
-                  }));
-                }
-              }}
+              onChange={handlePasswordChange}
               placeholder="password"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
@@ -135,20 +170,7 @@ const Signup = () => {
               type="password"
               autoComplete="new-password"
               value={info.confirmPassword}
-              onChange={(e) => {
-                setInfo({ ...info, confirmPassword: e.target.value });
-                if (e.target.value === info.password) {
-                  setValidate((prev) => ({
-                    ...prev,
-                    confirmPassword: "text-green-500",
-                  }));
-                } else {
-                  setValidate((prev) => ({
-                    ...prev,
-                    confirmPassword: "text-red-500",
-                  }));
-                }
-              }}
+              onChange={handleConfirmPasswordChange}
               placeholder="confirm password"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
@@ -185,5 +207,5 @@ const Signup = () => {
       </form>
     </div>
   );
-};
+});
 export default Signup;

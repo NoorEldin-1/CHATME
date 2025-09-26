@@ -3,3 +3,36 @@
 @theme {
   --font-notoSansArabic: "Noto Sans Arabic", sans-serif;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.input-custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.input-custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 10px 0;
+}
+
+.input-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+.input-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
