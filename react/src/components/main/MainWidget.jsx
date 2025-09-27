@@ -3,9 +3,76 @@ import guestImg from "../../assets/waiter_8560763.png";
 import { HiDotsVertical } from "react-icons/hi";
 import { IoMdSend } from "react-icons/io";
 import { CiTimer } from "react-icons/ci";
+import UserMenu from "../library/UserMenu";
+import { AnimatePresence } from "motion/react";
+import MessageMenu from "../library/MessageMenu";
+import { FaCloudUploadAlt } from "react-icons/fa";
 
 const MainWidget = React.memo(() => {
   const [messages, setMessages] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const openUserMenu = Boolean(anchorEl);
+
+  const [anchorElMessageMenu, setAnchorElMessageMenu] = useState(null);
+  const openMessageMenu = Boolean(anchorElMessageMenu);
+
+  const handleOpenUserMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const handleOpenMessageMenu = (event) => {
+    setAnchorElMessageMenu(event.currentTarget);
+  };
+
+  const handleCloseMessageMenu = () => {
+    setAnchorElMessageMenu(null);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (anchorEl && !anchorEl.contains(event.target)) {
+        handleCloseUserMenu();
+      }
+    };
+
+    const handleScroll = () => {
+      if (anchorEl) {
+        handleCloseUserMenu();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [anchorEl]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (anchorElMessageMenu && !anchorElMessageMenu.contains(event.target)) {
+        handleCloseMessageMenu();
+      }
+    };
+
+    const handleScroll = () => {
+      if (anchorElMessageMenu) {
+        handleCloseMessageMenu();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [anchorElMessageMenu]);
 
   useEffect(() => {
     setMessages(Array.from({ length: 100 }));
@@ -26,7 +93,10 @@ const MainWidget = React.memo(() => {
             }`}
           >
             {i % 2 === 0 && (
-              <div className="ml-auto w-8 h-8 rounded-full bg-transparent hover:bg-white/25 duration-300 cursor-pointer hover:scale-95 flex items-center justify-center">
+              <div
+                onClick={handleOpenMessageMenu}
+                className="ml-auto w-8 h-8 rounded-full bg-transparent hover:bg-white/25 duration-300 cursor-pointer hover:scale-95 flex items-center justify-center"
+              >
                 <HiDotsVertical />
               </div>
             )}
@@ -44,9 +114,10 @@ const MainWidget = React.memo(() => {
       });
     }
   }, [messages]);
+
   return (
     <div className="bg-black/25 backdrop-blur-lg relative flex-1 overflow-y-auto overflow-x-hidden text-white flex flex-col">
-      <div className="h-16 bg-black/50 backdrop-blur-lg flex items-center gap-3 p-2 border-b border-white/25">
+      <div className="relative z-50 h-16 bg-black/50 backdrop-blur-lg flex items-center gap-3 p-2 border-b border-white/25">
         <div className="relative">
           <span className="w-3 h-3 rounded-full bg-green-500 absolute top-[0px] right-[0px] z-10"></span>
           <img src={guestImg} className="w-12 h-12 relative" />
@@ -55,12 +126,21 @@ const MainWidget = React.memo(() => {
           <p className="font-bold text-sm">fullName</p>
           <p className="text-xs text-white/50">@username</p>
         </div>
-        <div className="w-10 h-10 bg-transparent hover:bg-white/25 duration-300 flex items-center justify-center rounded-full cursor-pointer text-2xl">
+        <div
+          onClick={handleOpenUserMenu}
+          className="w-10 h-10 bg-transparent hover:bg-white/25 duration-300 flex items-center justify-center rounded-full cursor-pointer text-2xl"
+        >
           <HiDotsVertical />
         </div>
+        <AnimatePresence>
+          {openUserMenu && <UserMenu anchorEl={anchorEl} />}
+        </AnimatePresence>
       </div>
       <div className="custom-scrollbar flex flex-col gap-4 relative overflow-auto flex-1 p-2">
         {messagesElements}
+        <AnimatePresence>
+          {openMessageMenu && <MessageMenu anchorEl={anchorElMessageMenu} />}
+        </AnimatePresence>
       </div>
       <div className="flex gap-4 items-center border-t border-white/25 w-full p-4">
         <textarea
@@ -68,8 +148,13 @@ const MainWidget = React.memo(() => {
           className="input-custom-scrollbar resize-none flex-1 outline-0 placeholder:duration-300 focus:placeholder:text-transparent border border-white/25 rounded-2xl p-2 h-20"
           placeholder="Write your message..."
         />
-        <div className="cursor-pointer text-2xl duration-300 hover:scale-95 bg-transparent text-white hover:bg-white/25 rounded-full w-10 h-10 flex items-center justify-center">
-          <IoMdSend className="text-blue-600" />
+        <div className="flex flex-col justify-center gap-1">
+          <div className="cursor-pointer text-2xl duration-300 hover:scale-95 bg-transparent text-white hover:bg-white/25 rounded-full w-10 h-10 flex items-center justify-center">
+            <IoMdSend className="text-blue-600" />
+          </div>
+          <div className="cursor-pointer text-2xl duration-300 hover:scale-95 bg-transparent text-white hover:bg-white/25 rounded-full w-10 h-10 flex items-center justify-center">
+            <FaCloudUploadAlt className="text-gray-300" />
+          </div>
         </div>
       </div>
     </div>

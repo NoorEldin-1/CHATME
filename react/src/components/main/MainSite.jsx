@@ -1,3 +1,8 @@
+import DeleteMessageDialog from "../library/DeleteMessageDialog";
+import DeleteUserDialog from "../library/DeleteUserDialog";
+import FindUserDialog from "../library/FindUserDialog";
+import NotificationsDialog from "../library/NotificationsDialog";
+import SettingDialog from "../library/SettingDialog";
 import MainWidget from "./MainWidget";
 import NavBar from "./NavBar";
 import Side from "./Side";
@@ -18,6 +23,11 @@ const MainSite = () => {
           <MainWidget />
         </div>
       </div>
+      <DeleteMessageDialog />
+      <DeleteUserDialog />
+      <SettingDialog />
+      <FindUserDialog />
+      <NotificationsDialog />
     </div>
   );
 };
