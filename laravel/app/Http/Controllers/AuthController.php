@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -27,6 +28,10 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        if ($user->image) {
+            $user->image = Storage::url($user->image);
+        }
 
         return response()->json([
             'token' => $token,
@@ -54,6 +59,10 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        if ($user->image) {
+            $user->image = Storage::url($user->image);
+        }
+
         return response()->json([
             'token' => $token,
             'user' => $user,
@@ -65,4 +74,70 @@ class AuthController extends Controller
         request()->user()->currentAccessToken()->delete();
         return response()->json(['message'=> 'Logged out successfully.'], 200);
     }
+
+    public function update() {
+    $validator = Validator::make(request()->all(), [
+        'fullName' => 'sometimes|string|min:4|max:255', // Add 'sometimes'
+        'password' => 'sometimes|string|min:8|max:255|confirmed', // Add 'sometimes'
+    ]);
+    
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()]);
+    }
+
+    $user = request()->user();
+    $data = [];
+
+    // Check if any fields are provided
+    if (!request()->has('fullName') && !request()->has("password")) {
+        return response()->json(['message' => 'No fields to update']);
+    }
+
+    if (request()->has('fullName')) {
+        $data["fullName"] = request('fullName');
+    }
+
+    if (request()->has('password')) {
+        $data["password"] = Hash::make(request('password')); // Hash the password
+    }
+
+    $user->update($data);
+
+    
+    return response()->json([
+        "message" => "User updated successfully",
+        "user" => $user
+    ]);
+}
+    public function uploadProfileImage() {
+    $validator = Validator::make(request()->all(), [
+        "image" => "required|mimes:jpeg,png,jpg,gif,svg,webp,bmp,tiff,tif,ico,heic,heif,avif|max:2048"
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(["errors" => $validator->errors()], 422);
+    }
+
+    $user = request()->user();
+
+    if (request()->hasFile("image")) {
+        if ($user->image && Storage::disk('public')->exists($user->image)) {
+            Storage::disk('public')->delete($user->image);
+        }
+        
+        $file = request()->file("image");
+        $imagePath = $file->store("profileImages", "public");
+        $user->image = $imagePath;
+        $user->save();
+
+        $user->image = Storage::url($user->image);
+        
+        return response()->json([
+            "message" => "Profile image uploaded successfully",
+            "user" => $user
+        ]);
+    }
+
+    return response()->json(["message" => "No image provided"], 400);
+}
 }

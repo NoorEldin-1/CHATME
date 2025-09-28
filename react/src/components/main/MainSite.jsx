@@ -1,6 +1,7 @@
 import DeleteMessageDialog from "../library/DeleteMessageDialog";
 import DeleteUserDialog from "../library/DeleteUserDialog";
 import FindUserDialog from "../library/FindUserDialog";
+import LogoutDialog from "../library/LogoutDialog";
 import NotificationsDialog from "../library/NotificationsDialog";
 import SettingDialog from "../library/SettingDialog";
 import MainWidget from "./MainWidget";
@@ -28,6 +29,7 @@ const MainSite = () => {
       <SettingDialog />
       <FindUserDialog />
       <NotificationsDialog />
+      <LogoutDialog />
     </div>
   );
 };

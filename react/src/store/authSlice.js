@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../main";
+import { BASE_URL, FILE_URL } from "../main";
 
 export const handleSignup = createAsyncThunk(
   "auth/signup",
@@ -36,12 +36,43 @@ export const handleLogout = createAsyncThunk("auth/logout", async () => {
   return res.data;
 });
 
+export const handleUpdate = createAsyncThunk("auth/update", async (info) => {
+  const res = await axios.put(`${BASE_URL}auth/update`, info, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+  return res.data;
+});
+
+export const uploadProfileImage = createAsyncThunk(
+  "auth/uploadProfileImage",
+  async (image) => {
+    console.log(image);
+    const formData = new FormData();
+    formData.append("image", image);
+
+    const res = await axios.post(
+      `${BASE_URL}auth/uploadProfileImage`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return res.data;
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
     loginLoading: false,
     signupLoading: false,
     logoutLoading: false,
+    updateLoading: false,
     signupErrorMsg: null,
     loginErrorMsg: null,
   },
@@ -61,6 +92,12 @@ const authSlice = createSlice({
           window.localStorage.setItem("userId", action.payload.user.id);
           window.localStorage.setItem("username", action.payload.user.username);
           window.localStorage.setItem("fullName", action.payload.user.fullName);
+          if (action.payload.user.image) {
+            window.localStorage.setItem(
+              "image",
+              `${FILE_URL}${action.payload.user.image}`
+            );
+          }
           window.location.href = "/";
         }
       })
@@ -79,6 +116,12 @@ const authSlice = createSlice({
           window.localStorage.setItem("userId", action.payload.user.id);
           window.localStorage.setItem("username", action.payload.user.username);
           window.localStorage.setItem("fullName", action.payload.user.fullName);
+          if (action.payload.user.image) {
+            window.localStorage.setItem(
+              "image",
+              `${FILE_URL}${action.payload.user.image}`
+            );
+          }
           window.location.href = "/";
         }
       })
@@ -89,9 +132,27 @@ const authSlice = createSlice({
         state.logoutLoading = false;
         window.localStorage.clear();
         window.location.href = "/";
+      })
+      .addCase(handleUpdate.pending, (state) => {
+        state.updateLoading = true;
+      })
+      .addCase(handleUpdate.fulfilled, (state, action) => {
+        state.updateLoading = false;
+        console.log(action.payload);
+        window.localStorage.setItem("fullName", action.payload.user.fullName);
+        window.location.href = "/";
+      })
+      .addCase(uploadProfileImage.pending, (state) => {
+        state.updateLoading = true;
+      })
+      .addCase(uploadProfileImage.fulfilled, (state, action) => {
+        state.updateLoading = false;
+        window.localStorage.setItem(
+          "image",
+          `${FILE_URL}${action.payload.user.image}`
+        );
       });
   },
 });
 
-// export const {} = authSlice.actions;
 export default authSlice.reducer;
