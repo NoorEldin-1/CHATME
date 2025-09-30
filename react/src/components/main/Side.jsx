@@ -2,23 +2,28 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FaRegArrowAltCircleLeft } from "react-icons/fa";
 import { FaRegArrowAltCircleRight } from "react-icons/fa";
 import guestImg from "../../assets/waiter_8560763.png";
+import { useDispatch, useSelector } from "react-redux";
+import { allChats } from "../../store/chatSlice";
+import Loader from "../library/Loader";
 
 const Side = React.memo(() => {
   const [width, setWidth] = useState("w-[70px]");
-  const [users, setUsers] = useState([]);
+  const dispatch = useDispatch();
+  const chats = useSelector((state) => state.chat.chats);
+  const loading = useSelector((state) => state.chat.allChatsLoading);
 
   useEffect(() => {
-    setUsers(Array.from({ length: 50 }));
-  }, []);
+    dispatch(allChats());
+  }, [dispatch]);
 
-  const usersElement = useMemo(() => {
-    if (users.length === 0) {
+  const chatsElement = useMemo(() => {
+    if (chats.length === 0) {
       return <p className="text-center mt-4 font-bold uppercase">no users</p>;
     } else {
-      return users.map((_, i) => {
+      return chats.map((chat) => {
         return (
           <div
-            key={i}
+            key={chat?.id}
             className={`flex items-center ${
               width === "w-[70px]" ? "justify-center" : ""
             } gap-3 duration-100 hover:bg-white/25 cursor-pointer p-2`}
@@ -35,7 +40,9 @@ const Side = React.memo(() => {
                   <img src={guestImg} className="w-12 h-12 relative" />
                 </div>
                 <div className="flex-1 flex flex-col relative">
-                  <p className="font-bold text-sm">fullName</p>
+                  <p className="font-bold text-sm">
+                    {chat.other_user.fullName}
+                  </p>
                   <p className="text-xs text-white/50">
                     this is last message...
                   </p>
@@ -47,7 +54,7 @@ const Side = React.memo(() => {
         );
       });
     }
-  }, [users, width]);
+  }, [chats, width]);
 
   return (
     <div
@@ -71,7 +78,13 @@ const Side = React.memo(() => {
         )}
       </div>
       <div className="h-full overflow-y-auto overflow-x-hidden flex flex-col gap-5 custom-scrollbar flex-1">
-        {usersElement}
+        {loading ? (
+          <div className="grid place-content-center w-full h-full">
+            <Loader />
+          </div>
+        ) : (
+          chatsElement
+        )}
       </div>
     </div>
   );

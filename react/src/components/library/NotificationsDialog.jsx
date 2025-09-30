@@ -6,10 +6,80 @@ import { IoIosPersonAdd } from "react-icons/io";
 import guestImg from "../../assets/waiter_8560763.png";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
+import { useCallback, useEffect, useMemo } from "react";
+import {
+  acceptNotification,
+  notifications,
+  removeNotification,
+} from "../../store/userSlice";
+import Loader from "./Loader";
 
 const NotificationsDialog = () => {
   const dialog = useSelector((state) => state.dialog);
   const dispatch = useDispatch();
+  const notificationsUsers = useSelector((state) => state.user.notifications);
+  const loading = useSelector((state) => state.user.handleNotificationLoading);
+
+  useEffect(() => {
+    dispatch(notifications());
+  }, [dispatch]);
+
+  const removeNotify = useCallback(
+    (id) => {
+      dispatch(removeNotification(id));
+    },
+    [dispatch]
+  );
+
+  const acceptNotify = useCallback(
+    (id) => {
+      dispatch(acceptNotification(id));
+    },
+    [dispatch]
+  );
+
+  const notificationsElements = useMemo(() => {
+    if (notificationsUsers.length <= 0) {
+      return (
+        <p className="text-white text-center text-sm font-semibold uppercase">
+          no notifications here.
+        </p>
+      );
+    } else {
+      return notificationsUsers.map((notification) => {
+        return (
+          <div
+            key={notification.id}
+            className="flex items-center gap-2 border border-white/10 rounded-md p-2"
+          >
+            <img src={guestImg} alt="" className="w-10 h-10 rounded-full" />
+            <div className="flex-1 flex flex-col justify-center text-white">
+              <p className="text-sm font-bold uppercase">new friend request</p>
+              <p className="text-sm font-bold text-white/50 italic">
+                {notification.from_user.username}
+              </p>
+            </div>
+            <div className="flex gap-4 items-center">
+              {loading ? (
+                <Loader />
+              ) : (
+                <>
+                  <FaCheckCircle
+                    onClick={() => acceptNotify(notification.id)}
+                    className="text-3xl text-green-600 cursor-pointer duration-300 hover:text-green-800"
+                  />
+                  <MdCancel
+                    onClick={() => removeNotify(notification.id)}
+                    className="text-4xl text-red-700 cursor-pointer duration-300 hover:text-red-900"
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        );
+      });
+    }
+  }, [acceptNotify, loading, notificationsUsers, removeNotify]);
 
   return (
     <div>
@@ -31,25 +101,7 @@ const NotificationsDialog = () => {
                 </h3>
               </div>
               <div className="px-6 py-4 flex flex-col gap-4">
-                <div className="flex items-center gap-2 border border-white/10 rounded-md p-2">
-                  <img
-                    src={guestImg}
-                    alt=""
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div className="flex-1 flex flex-col justify-center text-white">
-                    <p className="text-sm font-bold uppercase">
-                      new friend request
-                    </p>
-                    <p className="text-sm font-bold text-white/50 italic">
-                      @username
-                    </p>
-                  </div>
-                  <div className="flex gap-4 items-center">
-                    <FaCheckCircle className="text-3xl text-green-600 cursor-pointer duration-300 hover:text-green-800" />
-                    <MdCancel className="text-4xl text-red-700 cursor-pointer duration-300 hover:text-red-900" />
-                  </div>
-                </div>
+                {notificationsElements}
               </div>
               <div className="px-6 py-4 border-t border-gray-200/10 flex justify-end space-x-3">
                 <button

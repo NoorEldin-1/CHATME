@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { IoIosPersonAdd } from "react-icons/io";
 import guestImg from "../../assets/waiter_8560763.png";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { search } from "../../store/userSlice";
+import { addFriend, search } from "../../store/userSlice";
 import Loader from "./Loader";
 
 const FindUserDialog = () => {
@@ -14,6 +14,7 @@ const FindUserDialog = () => {
   const loading = useSelector((state) => state.user.searchLoading);
   const searchUsers = useSelector((state) => state.user.searchUsers);
   const timeoutRef = useRef(null);
+  const addFriendLoading = useSelector((state) => state.user.addFriendLoading);
 
   const handleSearch = useCallback(
     (e) => {
@@ -59,10 +60,17 @@ const FindUserDialog = () => {
                 @{user.username}
               </p>
             </div>
-            <button className="px-4 py-2 text-sm font-medium text-black bg-gray-100 hover:bg-gray-400 duration-300 rounded-md uppercase cursor-pointer flex gap-1 items-center justify-center">
-              <span>add</span>
-              <IoIosPersonAdd />
-            </button>
+            {addFriendLoading ? (
+              <Loader />
+            ) : (
+              <button
+                onClick={() => dispatch(addFriend(user.id))}
+                className="px-4 py-2 text-sm font-medium text-black bg-gray-100 hover:bg-gray-400 duration-300 rounded-md uppercase cursor-pointer flex gap-1 items-center justify-center"
+              >
+                <span>add</span>
+                <IoIosPersonAdd />
+              </button>
+            )}
           </div>
         );
       });
@@ -75,7 +83,7 @@ const FindUserDialog = () => {
         </div>
       );
     }
-  }, [searchUsers]);
+  }, [addFriendLoading, dispatch, searchUsers]);
 
   return (
     <div>

@@ -2,11 +2,12 @@ import React from "react";
 import { IoMdSettings } from "react-icons/io";
 import { IoIosNotifications } from "react-icons/io";
 import { LuUserSearch } from "react-icons/lu";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setDialog } from "../../store/dialogSlice";
 
 const NavBar = React.memo(() => {
   const dispatch = useDispatch();
+  const notificationsCount = useSelector((state) => state.user.notifications);
   return (
     <div className="overflow-hidden w-full h-16 bg-black/25 backdrop-blur-lg flex items-center justify-between relative text-white border-b border-white/25 p-4">
       <p className="font-bold text-lg whitespace-nowrap">
@@ -19,7 +20,7 @@ const NavBar = React.memo(() => {
         >
           <IoIosNotifications className="text-yellow-300 text-3xl relative" />
           <span className="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center absolute top-[-5px] left-[-5px] text-xs">
-            10
+            {notificationsCount ? notificationsCount.length : 0}
           </span>
         </div>
         <LuUserSearch
