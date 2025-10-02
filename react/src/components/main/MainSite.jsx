@@ -1,3 +1,4 @@
+import { useSelector } from "react-redux";
 import DeleteMessageDialog from "../library/DeleteMessageDialog";
 import DeleteUserDialog from "../library/DeleteUserDialog";
 import FindUserDialog from "../library/FindUserDialog";
@@ -9,6 +10,8 @@ import NavBar from "./NavBar";
 import Side from "./Side";
 
 const MainSite = () => {
+  const activeChat = useSelector((state) => state.chat.activeChat);
+
   return (
     <div className="h-screen w-full bg-[#020617] relative select-none">
       <div
@@ -21,7 +24,15 @@ const MainSite = () => {
         <Side />
         <div className="flex-1 h-full flex flex-col overflow-hidden">
           <NavBar />
-          <MainWidget />
+          {activeChat ? (
+            <MainWidget />
+          ) : (
+            <div className="w-full h-full grid place-content-center relative">
+              <p className="text-white font-bold text-2xl uppercase text-center">
+                select someone to chat with.
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <DeleteMessageDialog />

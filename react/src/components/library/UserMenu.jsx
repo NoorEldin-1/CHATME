@@ -5,6 +5,7 @@ import { setDialog } from "../../store/dialogSlice";
 
 const UserMenu = ({ anchorEl }) => {
   const dispatch = useDispatch();
+
   if (!anchorEl) return null;
   return (
     <motion.div
@@ -22,7 +23,7 @@ const UserMenu = ({ anchorEl }) => {
           onClick={() => dispatch(setDialog("deleteUserDialog"))}
           className="font-bold block w-full text-left px-4 py-2 text-sm text-black cursor-pointer capitalize hover:bg-black/25"
         >
-          delete user
+          delete friend
         </button>
       </div>
     </motion.div>

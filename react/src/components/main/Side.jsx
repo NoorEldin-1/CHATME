@@ -3,7 +3,7 @@ import { FaRegArrowAltCircleLeft } from "react-icons/fa";
 import { FaRegArrowAltCircleRight } from "react-icons/fa";
 import guestImg from "../../assets/waiter_8560763.png";
 import { useDispatch, useSelector } from "react-redux";
-import { allChats } from "../../store/chatSlice";
+import { allChats, setActiveChat } from "../../store/chatSlice";
 import Loader from "../library/Loader";
 
 const Side = React.memo(() => {
@@ -23,6 +23,7 @@ const Side = React.memo(() => {
       return chats.map((chat) => {
         return (
           <div
+            onClick={() => dispatch(setActiveChat(chat))}
             key={chat?.id}
             className={`flex items-center ${
               width === "w-[70px]" ? "justify-center" : ""
@@ -30,31 +31,42 @@ const Side = React.memo(() => {
           >
             {width === "w-[70px]" ? (
               <div className="relative">
-                <span className="w-3 h-3 rounded-full bg-green-500 absolute top-[0px] right-[0px] z-10"></span>
-                <img src={guestImg} className="w-12 h-12 relative" />
+                <img
+                  src={
+                    chat.other_user.image === null
+                      ? guestImg
+                      : chat.other_user.image
+                  }
+                  className="w-12 h-12 relative rounded-full object-cover"
+                />
               </div>
             ) : (
               <>
                 <div className="relative">
-                  <span className="w-3 h-3 rounded-full bg-green-500 absolute top-[0px] right-[0px] z-10"></span>
-                  <img src={guestImg} className="w-12 h-12 relative" />
+                  <img
+                    src={
+                      chat.other_user.image === null
+                        ? guestImg
+                        : chat.other_user.image
+                    }
+                    className="w-12 h-12 relative rounded-full object-cover"
+                  />
                 </div>
                 <div className="flex-1 flex flex-col relative">
                   <p className="font-bold text-sm">
                     {chat.other_user.fullName}
                   </p>
                   <p className="text-xs text-white/50">
-                    this is last message...
+                    @{chat.other_user.username}
                   </p>
                 </div>
-                <span className="w-3 h-3 rounded-full bg-green-500 relative"></span>
               </>
             )}
           </div>
         );
       });
     }
-  }, [chats, width]);
+  }, [chats, dispatch, width]);
 
   return (
     <div

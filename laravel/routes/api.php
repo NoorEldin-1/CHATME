@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,3 +24,8 @@ Route::get("/users/remove/notifications/{id}", [UserController::class,"removeNot
 Route::get("/users/accept/notifications/{id}", [UserController::class,"acceptNotification"])->middleware("auth:sanctum");
 
 Route::get("/chats/all", [ChatController::class,"allChats"])->middleware("auth:sanctum");
+Route::delete("/chats/delete/{id}", [ChatController::class,"deleteChat"])->middleware("auth:sanctum");
+
+Route::get("/messages/{chatID}", [MessageController::class,"allMessages"])->middleware("auth:sanctum");
+Route::post("/messages/send/{chatID}", [MessageController::class,"sendMessage"])->middleware("auth:sanctum");
+Route::delete("/messages/delete/{chatID}/{messageID}", [MessageController::class,"deleteMessage"])->middleware("auth:sanctum");

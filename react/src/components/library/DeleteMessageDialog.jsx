@@ -2,10 +2,23 @@ import { useDispatch, useSelector } from "react-redux";
 import { setDialog } from "../../store/dialogSlice";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "motion/react";
+import { deleteMessage } from "../../store/messageSlice";
+import Loader from "./Loader";
 
 const DeleteMessageDialog = () => {
   const dialog = useSelector((state) => state.dialog);
   const dispatch = useDispatch();
+  const activeMessage = useSelector((state) => state.message.activeMessage);
+  const loading = useSelector((state) => state.message.deleteLoading);
+
+  const handleDeleteMessage = () => {
+    dispatch(
+      deleteMessage({
+        chatID: activeMessage.chat_id,
+        messageID: activeMessage.id,
+      })
+    );
+  };
 
   return (
     <div>
@@ -32,18 +45,24 @@ const DeleteMessageDialog = () => {
                 </p>
               </div>
               <div className="px-6 py-4 border-t border-gray-200/10 flex justify-end space-x-3">
-                <button
-                  onClick={() => dispatch(setDialog(null))}
-                  className="px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-black rounded-md uppercase cursor-pointer duration-300"
-                >
-                  cancel
-                </button>
-                <button
-                  onClick={() => dispatch(setDialog(null))}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-md uppercase cursor-pointer duration-300"
-                >
-                  delete
-                </button>
+                {loading ? (
+                  <Loader />
+                ) : (
+                  <>
+                    <button
+                      onClick={() => dispatch(setDialog(null))}
+                      className="px-4 py-2 text-sm font-medium text-white hover:bg-gray-100 hover:text-black rounded-md uppercase cursor-pointer duration-300"
+                    >
+                      cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteMessage}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-md uppercase cursor-pointer duration-300"
+                    >
+                      delete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

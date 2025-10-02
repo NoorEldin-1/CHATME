@@ -32,4 +32,12 @@ class ChatController extends Controller
 
         return response()->json(["chats" => $chats]);
     }
+
+    public function deleteChat($id) {
+        $chat = Chat::findOrFail($id);
+
+        $chat->delete();
+
+        return response()->json(["message" => "Chat deleted successfully"]);
+    }
 }
