@@ -36,9 +36,6 @@ Add friends, and enjoy smooth, instant messaging with a beautiful, responsive in
 <a href="https://laravel.com/" target="_blank">
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg" alt="Laravel" width="50"/>
 </a>
-<a href="https://reverb.laravel.com/" target="_blank">
-  <img src="https://laravel.com/img/logomark.min.svg" alt="Laravel Reverb" width="50"/>
-</a>
 <a href="https://www.mysql.com/" target="_blank">
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" alt="MySQL" width="50"/>
 </a>
@@ -64,3 +61,17 @@ Add friends, and enjoy smooth, instant messaging with a beautiful, responsive in
 - Responsive and mobile-friendly UI
 - Laravel-based secure authentication
 - Smooth animations and transitions
+
+---
+
+## 🎬 Demo Video
+
+Check out a quick demo of CHATME in action:
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=B-g4ZWdilYU" target="_blank">
+    <img src="https://img.youtube.com/vi/B-g4ZWdilYU/hqdefault.jpg" alt="YANKTUBE Demo Video" width="480" style="border-radius: 12px; box-shadow: 0 2px 8px #0002;"/>
+  </a>
+</p>
+
+[Watch on YouTube](https://www.youtube.com/watch?v=B-g4ZWdilYU)
