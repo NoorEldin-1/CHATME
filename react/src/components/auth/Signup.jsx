@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import Button from "../library/Button";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleSignup } from "../../store/authSlice";
 import Loader from "../library/Loader";
@@ -10,109 +10,77 @@ const Signup = React.memo(() => {
   const dispatch = useDispatch();
   const loading = useSelector((state) => state.auth.signupLoading);
   const errorMsg = useSelector((state) => state.auth.signupErrorMsg);
+
   const [info, setInfo] = useState({
     username: "",
     fullName: "",
     password: "",
     confirmPassword: "",
   });
-  const [validate, setValidate] = useState({
-    username: "text-white/50",
-    fullName: "text-white/50",
-    password: "text-white/50",
-    confirmPassword: "text-white/50",
-  });
 
-  const signup = useCallback(() => {
-    if (
-      info.username.trim().length < 4 ||
-      info.fullName.trim().length < 4 ||
-      info.password.trim().length < 8 ||
-      info.password !== info.confirmPassword
-    )
-      return;
-    dispatch(handleSignup({ info }));
-  }, [dispatch, info]);
+  // Memoized validation states to prevent unnecessary recalculations
+  const validationStates = useMemo(() => {
+    const isUsernameValid = info.username.trim().length >= 4;
+    const isFullNameValid = info.fullName.trim().length >= 4;
+    const isPasswordValid = info.password.trim().length >= 8;
+    const isConfirmPasswordValid = info.password === info.confirmPassword;
 
-  const handleUsernameChange = useCallback(
-    (e) => {
-      setInfo({ ...info, username: e.target.value });
-      if (e.target.value.trim().length >= 4) {
-        setValidate((prev) => ({
-          ...prev,
-          username: "text-green-500",
-        }));
-      } else {
-        setValidate((prev) => ({
-          ...prev,
-          username: "text-red-500",
-        }));
-      }
+    return {
+      isUsernameValid,
+      isFullNameValid,
+      isPasswordValid,
+      isConfirmPasswordValid,
+      isFormValid:
+        isUsernameValid &&
+        isFullNameValid &&
+        isPasswordValid &&
+        isConfirmPasswordValid,
+    };
+  }, [info.username, info.fullName, info.password, info.confirmPassword]);
+
+  // Single optimized change handler
+  const handleInputChange = useCallback(
+    (field) => (e) => {
+      const value = e.target.value;
+      setInfo((prev) => ({ ...prev, [field]: value }));
     },
-    [info]
+    []
   );
 
-  const handleFullNameChange = useCallback(
+  // Optimized signup function
+  const signup = useCallback(
     (e) => {
-      setInfo({ ...info, fullName: e.target.value });
-      if (e.target.value.trim().length >= 4) {
-        setValidate((prev) => ({
-          ...prev,
-          fullName: "text-green-500",
-        }));
-      } else {
-        setValidate((prev) => ({
-          ...prev,
-          fullName: "text-red-500",
-        }));
-      }
+      e?.preventDefault();
+      if (!validationStates.isFormValid) return;
+      dispatch(handleSignup({ info }));
     },
-    [info]
+    [dispatch, info, validationStates.isFormValid]
   );
 
-  const handlePasswordChange = useCallback(
-    (e) => {
-      setInfo({ ...info, password: e.target.value });
-      if (e.target.value.trim().length >= 8) {
-        setValidate((prev) => ({
-          ...prev,
-          password: "text-green-500",
-        }));
-      } else {
-        setValidate((prev) => ({
-          ...prev,
-          password: "text-red-500",
-        }));
-      }
-    },
-    [info]
+  // Memoized validation classes
+  const validationClasses = useMemo(
+    () => ({
+      username: validationStates.isUsernameValid
+        ? "text-green-500"
+        : "text-gray-500",
+      fullName: validationStates.isFullNameValid
+        ? "text-green-500"
+        : "text-gray-500",
+      password: validationStates.isPasswordValid
+        ? "text-green-500"
+        : "text-gray-500",
+      confirmPassword: validationStates.isConfirmPasswordValid
+        ? "text-green-500"
+        : "text-gray-500",
+    }),
+    [validationStates]
   );
 
-  const handleConfirmPasswordChange = useCallback(
-    (e) => {
-      setInfo({ ...info, confirmPassword: e.target.value });
-      if (e.target.value === info.password) {
-        setValidate((prev) => ({
-          ...prev,
-          confirmPassword: "text-green-500",
-        }));
-      } else {
-        setValidate((prev) => ({
-          ...prev,
-          confirmPassword: "text-red-500",
-        }));
-      }
-    },
-    [info]
-  );
-
-  return (
-    <div className="relative grid place-content-center flex-1 select-none">
+  // Memoized form content to prevent unnecessary re-renders
+  const formContent = useMemo(
+    () => (
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          signup();
-        }}
+        onSubmit={signup}
         className="bg-black/50 backdrop-blur-xs flex flex-col gap-1 w-[300px] sm:w-[600px] p-3 rounded-lg border border-white/10 shadow-lg"
       >
         <h3 className="text-center font-bold text-2xl uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-white select-none">
@@ -128,56 +96,63 @@ const Signup = React.memo(() => {
               please enter valid information to create an account.
             </p>
           )}
+
           <div className="flex flex-col gap-2">
             <input
               type="text"
               value={info.username}
-              onChange={handleUsernameChange}
+              onChange={handleInputChange("username")}
               placeholder="username"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
-            <p className={`text-xs capitalize ${validate.username}`}>
+            <p className={`text-xs capitalize ${validationClasses.username}`}>
               username must be at least 4 characters
             </p>
           </div>
+
           <div className="flex flex-col gap-2">
             <input
               type="text"
               value={info.fullName}
-              onChange={handleFullNameChange}
+              onChange={handleInputChange("fullName")}
               placeholder="full name"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
-            <p className={`text-xs capitalize ${validate.fullName}`}>
+            <p className={`text-xs capitalize ${validationClasses.fullName}`}>
               full name must be at least 4 characters
             </p>
           </div>
+
           <div className="flex flex-col gap-2">
             <input
               type="password"
               autoComplete="new-password"
               value={info.password}
-              onChange={handlePasswordChange}
+              onChange={handleInputChange("password")}
               placeholder="password"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
-            <p className={`text-xs capitalize ${validate.password}`}>
+            <p className={`text-xs capitalize ${validationClasses.password}`}>
               password must be at least 8 characters
             </p>
           </div>
+
           <div className="flex flex-col gap-2">
             <input
               type="password"
               autoComplete="new-password"
               value={info.confirmPassword}
-              onChange={handleConfirmPasswordChange}
+              onChange={handleInputChange("confirmPassword")}
               placeholder="confirm password"
               className="outline-none bg-transparent border border-white/30 p-2 rounded-md text-white placeholder:duration-300 focus:placeholder:text-transparent w-full"
             />
-            <p className={`text-xs capitalize ${validate.confirmPassword}`}>
+            <p
+              className={`text-xs capitalize ${validationClasses.confirmPassword}`}
+            >
               passwords must match
             </p>
           </div>
+
           {loading ? (
             <Loader />
           ) : (
@@ -185,14 +160,7 @@ const Signup = React.memo(() => {
               variant="gradient"
               className="w-full"
               type="submit"
-              disabled={
-                info.username.trim().length < 4 ||
-                info.fullName.trim().length < 4 ||
-                info.password.trim().length < 8 ||
-                info.password !== info.confirmPassword
-                  ? true
-                  : false
-              }
+              disabled={!validationStates.isFormValid}
             >
               signup
             </Button>
@@ -205,7 +173,30 @@ const Signup = React.memo(() => {
           already have an account?
         </p>
       </form>
+    ),
+    [
+      errorMsg,
+      handleInputChange,
+      info.confirmPassword,
+      info.fullName,
+      info.password,
+      info.username,
+      loading,
+      navigate,
+      signup,
+      validationClasses.confirmPassword,
+      validationClasses.fullName,
+      validationClasses.password,
+      validationClasses.username,
+      validationStates.isFormValid,
+    ]
+  );
+
+  return (
+    <div className="relative grid place-content-center flex-1 select-none">
+      {formContent}
     </div>
   );
 });
+
 export default Signup;

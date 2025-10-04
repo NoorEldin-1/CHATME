@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ChatDelete;
 use App\Models\Chat;
 use Illuminate\Support\Facades\Storage;
 
@@ -36,8 +37,21 @@ class ChatController extends Controller
     public function deleteChat($id) {
         $chat = Chat::findOrFail($id);
 
+        $currentUser = request()->user();
+
+        $user1 = $chat->user_1;
+        $user2 = $chat->user_2;
+
         $chat->delete();
 
+        $broadcastChat = (object) [
+            "id" => $id,
+            "user_1" => $user1,
+            "user_2" => $user2,
+        ];
+        
+        event(new ChatDelete($broadcastChat));
+        
         return response()->json(["message" => "Chat deleted successfully"]);
     }
 }

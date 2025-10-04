@@ -5,11 +5,14 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 Route::get("/", function () {
     return response()->json(["message" => "API is working"]);
 });
+
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Route::post("/auth/signup", [AuthController::class, "signup"]);
 Route::post("/auth/login", [AuthController::class, "login"]);

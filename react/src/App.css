@@ -36,3 +36,28 @@
 .input-custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Move animations to CSS file to avoid style tag recalculation */
+@keyframes starMovement {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-2000px);
+  }
+}
+
+.animate-star-movement {
+  animation: starMovement 50s linear infinite;
+  will-change: transform; /* Hint browser for better performance */
+}
+
+.animate-star-movement-medium {
+  animation: starMovement 100s linear infinite;
+  will-change: transform;
+}
+
+.animate-star-movement-slow {
+  animation: starMovement 150s linear infinite;
+  will-change: transform;
+}

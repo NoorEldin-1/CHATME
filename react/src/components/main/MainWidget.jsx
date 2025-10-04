@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import guestImg from "../../assets/waiter_8560763.png";
 import { HiDotsVertical } from "react-icons/hi";
 import { IoMdSend } from "react-icons/io";
@@ -6,161 +12,248 @@ import { CiTimer } from "react-icons/ci";
 import UserMenu from "../library/UserMenu";
 import { AnimatePresence } from "motion/react";
 import MessageMenu from "../library/MessageMenu";
-import { FaCloudUploadAlt } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
   allMessages,
+  pushNewMessage,
+  removeMessage,
   sendMessage,
   setActiveMessage,
 } from "../../store/messageSlice";
 import Loader from "../library/Loader";
+import echo from "../../echo";
+import RelativeTime from "../library/RelativeTime";
+
+// Memoized message component to prevent unnecessary re-renders
+const MessageItem = React.memo(({ message, onOpenMessageMenu, dispatch }) => {
+  const isOwnMessage =
+    message.user_id === window.localStorage.getItem("userId");
+
+  return (
+    <div
+      className={`w-fit max-w-[75%] p-2 rounded-2xl ${
+        isOwnMessage ? "bg-blue-600/25 mr-auto" : "bg-red-500/25 ml-auto"
+      }`}
+    >
+      {isOwnMessage && (
+        <div
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenMessageMenu(event);
+            dispatch(setActiveMessage(message));
+          }}
+          className="ml-auto w-8 h-8 rounded-full bg-transparent hover:bg-white/25 duration-300 cursor-pointer hover:scale-95 flex items-center justify-center"
+        >
+          <HiDotsVertical />
+        </div>
+      )}
+      <p className="break-all">{message.content}</p>
+      <p className="italic font-bold text-xs flex items-center justify-end gap-2 mt-2 text-white/75">
+        <RelativeTime timestamp={message.created_at} />
+        <CiTimer className="text-lg" />
+      </p>
+    </div>
+  );
+});
+
+// Empty state component
+const EmptyMessages = () => (
+  <div className="w-full h-full grid place-content-center">
+    <p className="text-center font-bold uppercase">no messages yet.</p>
+  </div>
+);
 
 const MainWidget = React.memo(() => {
-  // const [messages, setMessages] = useState([]);
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.message.messages);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const openUserMenu = Boolean(anchorEl);
   const loading = useSelector((state) => state.message.getAllMessagesLoading);
-  const [messageText, setMessageText] = useState("");
   const sendLoading = useSelector((state) => state.message.sendLoading);
-
-  const [anchorElMessageMenu, setAnchorElMessageMenu] = useState(null);
-  const openMessageMenu = Boolean(anchorElMessageMenu);
-
   const activeChat = useSelector((state) => state.chat.activeChat);
 
-  const handleOpenUserMenu = (event) => {
+  // State declarations
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorElMessageMenu, setAnchorElMessageMenu] = useState(null);
+  const [messageText, setMessageText] = useState("");
+
+  const openUserMenu = Boolean(anchorEl);
+  const openMessageMenu = Boolean(anchorElMessageMenu);
+  const messagesContainerRef = useRef(null);
+
+  // Memoized selectors for derived data
+  const { otherUserImage, otherUserFullName, otherUserUsername } = useMemo(
+    () => ({
+      otherUserImage:
+        activeChat?.other_user?.image === null
+          ? guestImg
+          : activeChat?.other_user?.image,
+      otherUserFullName: activeChat?.other_user?.fullName,
+      otherUserUsername: activeChat?.other_user?.username,
+    }),
+    [
+      activeChat?.other_user?.image,
+      activeChat?.other_user?.fullName,
+      activeChat?.other_user?.username,
+    ]
+  );
+
+  const activeChatId = activeChat?.id;
+
+  // Event handlers with useCallback
+  const handleOpenUserMenu = useCallback((event) => {
     setAnchorEl(event.currentTarget);
-  };
+  }, []);
 
-  const handleCloseUserMenu = () => {
+  const handleCloseUserMenu = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
 
-  const handleOpenMessageMenu = (event) => {
+  const handleOpenMessageMenu = useCallback((event) => {
     setAnchorElMessageMenu(event.currentTarget);
-  };
+  }, []);
 
-  const handleCloseMessageMenu = () => {
+  const handleCloseMessageMenu = useCallback(() => {
     setAnchorElMessageMenu(null);
-  };
+  }, []);
 
-  const handleSendMessage = () => {
-    if (messageText.trim().length === 0) return;
+  const handleSendMessage = useCallback(() => {
+    if (messageText.trim().length === 0 || !activeChatId) return;
     dispatch(
       sendMessage({
-        chatID: activeChat.id,
+        chatID: activeChatId,
         content: messageText,
       })
     );
     setMessageText("");
+  }, [messageText, activeChatId, dispatch]);
+
+  // Generic click outside handler
+  const useClickOutside = (anchorElement, closeHandler) => {
+    useEffect(() => {
+      if (!anchorElement) return;
+
+      const handleClickOutside = (event) => {
+        if (anchorElement && !anchorElement.contains(event.target)) {
+          closeHandler();
+        }
+      };
+
+      const handleScroll = () => {
+        closeHandler();
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("scroll", handleScroll, true);
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("scroll", handleScroll, true);
+      };
+    }, [anchorElement, closeHandler]);
   };
 
+  // Use the generic click outside handler
+  useClickOutside(anchorEl, handleCloseUserMenu);
+  useClickOutside(anchorElMessageMenu, handleCloseMessageMenu);
+
+  // WebSocket effects with proper cleanup
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (anchorEl && !anchorEl.contains(event.target)) {
-        handleCloseUserMenu();
-      }
+    if (!activeChatId) return;
+
+    const messageDeleteChannel = echo.private(`message-delete.${activeChatId}`);
+    const handleMessageDeleted = (e) => {
+      dispatch(removeMessage(Number(e.message_id)));
     };
 
-    const handleScroll = () => {
-      if (anchorEl) {
-        handleCloseUserMenu();
-      }
-    };
+    messageDeleteChannel.listen("MessageDelete", handleMessageDeleted);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("scroll", handleScroll, true);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("scroll", handleScroll, true);
+      messageDeleteChannel.stopListening("MessageDelete", handleMessageDeleted);
+      echo.leaveChannel(messageDeleteChannel.name);
     };
-  }, [anchorEl]);
+  }, [activeChatId, dispatch]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (anchorElMessageMenu && !anchorElMessageMenu.contains(event.target)) {
-        handleCloseMessageMenu();
-      }
+    if (!activeChatId) return;
+
+    const messageSentChannel = echo.private(`chat.${activeChatId}`);
+    const handleMessageSent = (e) => {
+      dispatch(pushNewMessage(e.message));
     };
 
-    const handleScroll = () => {
-      if (anchorElMessageMenu) {
-        handleCloseMessageMenu();
-      }
-    };
+    messageSentChannel.listen("MessageSent", handleMessageSent);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("scroll", handleScroll, true);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("scroll", handleScroll, true);
+      messageSentChannel.stopListening("MessageSent", handleMessageSent);
+      echo.leaveChannel(messageSentChannel.name);
     };
-  }, [anchorElMessageMenu]);
+  }, [activeChatId, dispatch]);
 
+  // Fetch messages when active chat changes
   useEffect(() => {
-    dispatch(allMessages(activeChat.id));
-  }, [activeChat.id, dispatch]);
+    if (!activeChatId) return;
+    dispatch(allMessages(activeChatId));
+  }, [activeChatId, dispatch]);
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (!messagesContainerRef.current) return;
+    const container = messagesContainerRef.current;
+    container.scrollTop = container.scrollHeight;
+  }, [messages]);
+
+  // Memoized messages rendering
   const messagesElements = useMemo(() => {
     if (messages.length === 0) {
-      return (
-        <div className="w-full h-full grid place-content-center">
-          <p className="text-center font-bold uppercase">no messages yet.</p>
-        </div>
-      );
-    } else {
-      return messages.map((message) => {
-        return (
-          <div
-            key={message.id}
-            className={`w-[75%] p-2 rounded-2xl ${
-              message.user_id === window.localStorage.getItem("userId")
-                ? "bg-blue-600/25"
-                : "bg-red-500/25 ml-auto"
-            }`}
-          >
-            {message.user_id === window.localStorage.getItem("userId") && (
-              <div
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleOpenMessageMenu(event);
-                  dispatch(setActiveMessage(message));
-                }}
-                className="ml-auto w-8 h-8 rounded-full bg-transparent hover:bg-white/25 duration-300 cursor-pointer hover:scale-95 flex items-center justify-center"
-              >
-                <HiDotsVertical />
-              </div>
-            )}
-            <p>{message.content}</p>
-            <p className="italic font-bold text-xs flex items-center justify-end gap-2 mt-2 text-white/75">
-              <span>{message.created_at}</span> <CiTimer className="text-lg" />
-            </p>
-          </div>
-        );
-      });
+      return <EmptyMessages />;
     }
-  }, [dispatch, messages]);
+
+    return messages.map((message) => (
+      <MessageItem
+        key={message.id}
+        message={message}
+        onOpenMessageMenu={handleOpenMessageMenu}
+        dispatch={dispatch}
+      />
+    ));
+  }, [messages, handleOpenMessageMenu, dispatch]);
+
+  // Handle textarea key press for Enter key submission
+  const handleTextareaKeyPress = useCallback(
+    (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage]
+  );
+
+  if (!activeChat) {
+    return (
+      <div className="bg-black/25 backdrop-blur-lg relative flex-1 overflow-y-auto overflow-x-hidden text-white flex flex-col">
+        <div className="w-full h-full grid place-content-center">
+          <p className="text-center font-bold uppercase">
+            Select a chat to start messaging
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black/25 backdrop-blur-lg relative flex-1 overflow-y-auto overflow-x-hidden text-white flex flex-col">
+      {/* Header */}
       <div className="relative z-50 h-16 bg-black/50 backdrop-blur-lg flex items-center gap-3 p-2 border-b border-white/25">
         <div className="relative">
           <img
-            src={
-              activeChat.other_user.image === null
-                ? guestImg
-                : activeChat.other_user.image
-            }
+            src={otherUserImage}
             className="w-12 h-12 relative rounded-full object-cover"
+            alt={`${otherUserFullName}'s profile`}
           />
         </div>
         <div className="flex-1 flex flex-col relative">
-          <p className="font-bold text-sm">{activeChat.other_user.fullName}</p>
-          <p className="text-xs text-white/50">
-            @{activeChat.other_user.username}
-          </p>
+          <p className="font-bold text-sm">{otherUserFullName}</p>
+          <p className="text-xs text-white/50">@{otherUserUsername}</p>
         </div>
         <div
           onClick={handleOpenUserMenu}
@@ -172,7 +265,12 @@ const MainWidget = React.memo(() => {
           {openUserMenu && <UserMenu anchorEl={anchorEl} />}
         </AnimatePresence>
       </div>
-      <div className="custom-scrollbar flex flex-col gap-4 relative overflow-auto flex-1 p-2">
+
+      {/* Messages Container */}
+      <div
+        ref={messagesContainerRef}
+        className="custom-scrollbar flex flex-col gap-4 relative overflow-auto flex-1 p-2"
+      >
         {loading ? (
           <div className="w-full h-full grid place-content-center">
             <Loader />
@@ -184,11 +282,14 @@ const MainWidget = React.memo(() => {
           {openMessageMenu && <MessageMenu anchorEl={anchorElMessageMenu} />}
         </AnimatePresence>
       </div>
+
+      {/* Message Input */}
       <div className="flex gap-4 items-center border-t border-white/25 w-full p-4">
         <textarea
           disabled={sendLoading}
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
+          onKeyPress={handleTextareaKeyPress}
           type="text"
           className="input-custom-scrollbar resize-none flex-1 outline-0 placeholder:duration-300 focus:placeholder:text-transparent border border-white/25 rounded-2xl p-2 h-20"
           placeholder="Write your message..."

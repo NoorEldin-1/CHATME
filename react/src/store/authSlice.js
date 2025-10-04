@@ -48,7 +48,6 @@ export const handleUpdate = createAsyncThunk("auth/update", async (info) => {
 export const uploadProfileImage = createAsyncThunk(
   "auth/uploadProfileImage",
   async (image) => {
-    console.log(image);
     const formData = new FormData();
     formData.append("image", image);
 
@@ -138,7 +137,6 @@ const authSlice = createSlice({
       })
       .addCase(handleUpdate.fulfilled, (state, action) => {
         state.updateLoading = false;
-        console.log(action.payload);
         window.localStorage.setItem("fullName", action.payload.user.fullName);
         window.location.href = "/";
       })

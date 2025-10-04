@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ChatCreate;
+use App\Events\NotificationSent;
 use App\Models\Chat;
 use App\Models\Notification;
 use App\Models\User;
@@ -14,10 +16,16 @@ class UserController extends Controller
         $users = User::where("username", "!=", $currentUser->username)
                         ->whereRaw('LOWER(username) LIKE ?', ['%' . strtolower($username) . '%'])
                         ->latest("id")
-                        ->get()->map(function ($user) {
+                        ->get()->map(function ($user) use ($currentUser) {
                             if ($user->image) {
                                 $user->image = Storage::url($user->image);
                             }
+                            $user->is_pending = Notification::where("from" , $currentUser->id)->where("to" , $user->id)->first() ? true : false;
+                            $user->is_friend = Chat::where("user_1", $user->id)
+                            ->orWhere("user_2", $user->id)
+                            ->where("user_1", $currentUser->id)
+                            ->orWhere("user_2", $currentUser->id)
+                            ->first() ? true : false;
                             return $user;
                         });
         return response()->json(["users" => $users]);
@@ -30,10 +38,12 @@ class UserController extends Controller
             return response()->json(["message" => "user not found"]);
         }
 
-        Notification::create([
+        $notification =  Notification::create([
             "from" => $currentUser->id,
             "to" => $user->id,
         ]);
+
+        event(new NotificationSent($notification));
 
         return response()->json(["message" => "request send"]);
     }
@@ -68,12 +78,14 @@ class UserController extends Controller
             return response()->json(["message" => "notification not found"]);
         }
 
-        Chat::create([
+        $chat = Chat::create([
             "user_1" => $currentUser->id,
             "user_2" => $notification->from
         ]);
 
         $notification->delete();
+
+        event(new ChatCreate($chat));
 
         return response()->json(["message" => "friend added successfully"]);
     }

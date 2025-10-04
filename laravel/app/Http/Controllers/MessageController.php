@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageDelete;
+use App\Events\MessageSent;
 use App\Models\Chat;
 use App\Models\Message;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class MessageController extends Controller
 {
     public function allMessages($chatID) {
-        $chat = Chat::find($chatID);
-
-        if (!$chat) {
-            return response()->json(["message" => "Chat not found"]);
-        }
+        $chat = Chat::findOrFail($chatID);
 
         $messages = $chat->messages()->get();
 
@@ -22,11 +19,7 @@ class MessageController extends Controller
     }
 
     public function sendMessage($chatID) {
-        $chat = Chat::find($chatID);
-
-        if (!$chat) {
-            return response()->json(["message" => "Chat not found"]);
-        }
+        $chat = Chat::findOrFail($chatID);
 
         $validator = Validator::make(request()->all(), [
             "content" => "required",
@@ -42,27 +35,30 @@ class MessageController extends Controller
             "content" => request()->content,
         ]);
 
+        event(new MessageSent($message));
+
         return response()->json(["message" => $message]);
     }
 
     public function deleteMessage($chatID, $messageID) {
-        $chat = Chat::find($chatID);
+        $chat = Chat::findOrFail($chatID);
 
-        if (!$chat) {
-            return response()->json(["message" => "Chat not found"]);
-        }
-
-        $message = Message::find($messageID);
-
-        if (!$message) {
-            return response()->json(["message" => "Message not found"]);
-        }
+        $message = Message::findOrFail($messageID);
 
         if ($message->user_id != request()->user()->id) {
             return response()->json(["message" => "You are not authorized to delete this message"]);
         }
 
         $message->delete();
+
+        $broadcastMessage = (object) [
+            "chat_id" => $chatID,
+            "message_id" => $messageID,
+            "user_1" => $chat->user_1,
+            "user_2" => $chat->user_2,
+        ];
+
+        event(new MessageDelete($broadcastMessage));
 
         return response()->json(["message" => "Message deleted successfully"]);
     }

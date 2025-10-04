@@ -38,6 +38,35 @@ const chatSlice = createSlice({
     setActiveChat: (state, action) => {
       state.activeChat = action.payload;
     },
+    pushNewChat: (state, action) => {
+      if (action.payload.user_1 === localStorage.getItem("userId")) {
+        const newChat = {
+          id: action.payload.id,
+          other_user: action.payload.user2,
+          created_at: action.payload.created_at,
+          updated_at: action.payload.updated_at,
+        };
+        if (newChat.other_user.image) {
+          newChat.other_user.image = `${FILE_URL}/storage/${newChat.other_user.image}`;
+        }
+        state.chats.push(newChat);
+      } else if (action.payload.user_2 === localStorage.getItem("userId")) {
+        const newChat = {
+          id: action.payload.id,
+          other_user: action.payload.user1,
+          created_at: action.payload.created_at,
+          updated_at: action.payload.updated_at,
+        };
+        if (newChat.other_user.image) {
+          newChat.other_user.image = `${FILE_URL}/storage/${newChat.other_user.image}`;
+        }
+        state.chats.push(newChat);
+      }
+    },
+    removeChat: (state, action) => {
+      state.chats = state.chats.filter((chat) => chat.id !== action.payload);
+      state.activeChat = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -67,5 +96,5 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setActiveChat } = chatSlice.actions;
+export const { setActiveChat, pushNewChat, removeChat } = chatSlice.actions;
 export default chatSlice.reducer;

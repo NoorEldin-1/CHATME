@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL, formatRelativeTime } from "../main";
+import { BASE_URL } from "../main";
 import { setDialog } from "./dialogSlice";
 
 export const allMessages = createAsyncThunk("messages/all", async (chatID) => {
@@ -56,6 +56,16 @@ const messageSlice = createSlice({
     setActiveMessage: (state, action) => {
       state.activeMessage = action.payload;
     },
+
+    pushNewMessage: (state, action) => {
+      state.messages.push(action.payload);
+    },
+
+    removeMessage: (state, action) => {
+      state.messages = state.messages.filter(
+        (message) => message.id !== action.payload
+      );
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -65,12 +75,7 @@ const messageSlice = createSlice({
       .addCase(allMessages.fulfilled, (state, action) => {
         state.getAllMessagesLoading = false;
         console.log(action.payload.messages);
-        const updatedMessages = action.payload.messages.map((message) => {
-          return {
-            ...message,
-            created_at: formatRelativeTime(message.created_at),
-          };
-        });
+        const updatedMessages = action.payload.messages;
         state.messages = updatedMessages;
       })
       .addCase(sendMessage.pending, (state) => {
@@ -90,5 +95,6 @@ const messageSlice = createSlice({
   },
 });
 
-export const { setActiveMessage } = messageSlice.actions;
+export const { setActiveMessage, pushNewMessage, removeMessage } =
+  messageSlice.actions;
 export default messageSlice.reducer;

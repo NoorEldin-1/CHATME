@@ -11,18 +11,22 @@ export const search = createAsyncThunk("user/search", async (username) => {
   return res.data;
 });
 
-export const addFriend = createAsyncThunk("user/addFriend", async (userID) => {
-  const res = await axios.post(
-    `${BASE_URL}users/add/friend/${userID}`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    }
-  );
-  return res.data;
-});
+export const addFriend = createAsyncThunk(
+  "user/addFriend",
+  async (userID, { dispatch }) => {
+    const res = await axios.post(
+      `${BASE_URL}users/add/friend/${userID}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    dispatch(makeUserPending(userID));
+    return res.data;
+  }
+);
 
 export const notifications = createAsyncThunk(
   "user/notifications",
@@ -38,24 +42,26 @@ export const notifications = createAsyncThunk(
 
 export const removeNotification = createAsyncThunk(
   "user/remove/notifications",
-  async (id) => {
+  async (id, { dispatch }) => {
     const res = await axios.get(`${BASE_URL}users/remove/notifications/${id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
+    dispatch(clearNotification(id));
     return res.data;
   }
 );
 
 export const acceptNotification = createAsyncThunk(
   "user/accept/notifications",
-  async (id) => {
+  async (id, { dispatch }) => {
     const res = await axios.get(`${BASE_URL}users/accept/notifications/${id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
+    dispatch(clearNotification(id));
     return res.data;
   }
 );
@@ -70,7 +76,32 @@ const userSlice = createSlice({
     notificationsLoading: false,
     handleNotificationLoading: false,
   },
-  reducers: {},
+  reducers: {
+    addNotification(state, action) {
+      action.payload.from_user.image = action.payload.from_user.image
+        ? `${FILE_URL}/storage/${action.payload.from_user.image}`
+        : null;
+      state.notifications.push(action.payload);
+    },
+    clearNotification(state, action) {
+      state.notifications = state.notifications.filter(
+        (notification) => notification.id !== action.payload
+      );
+    },
+
+    makeUserPending(state, action) {
+      state.searchUsers = state.searchUsers.map((user) => {
+        if (user.id === action.payload) {
+          user.is_pending = true;
+        }
+        return user;
+      });
+    },
+
+    clearSearchUsers(state) {
+      state.searchUsers = [];
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(search.pending, (state) => {
@@ -85,38 +116,46 @@ const userSlice = createSlice({
           return user;
         });
         state.searchUsers = users;
-        console.log(action.payload);
       })
       .addCase(addFriend.pending, (state) => {
         state.addFriendLoading = true;
       })
-      .addCase(addFriend.fulfilled, (state, action) => {
+      .addCase(addFriend.fulfilled, (state) => {
         state.addFriendLoading = false;
-        console.log(action.payload);
       })
       .addCase(notifications.pending, (state) => {
         state.notificationsLoading = true;
       })
       .addCase(notifications.fulfilled, (state, action) => {
         state.notificationsLoading = false;
-        state.notifications = action.payload.notifications;
-        console.log(action.payload.notifications);
+        state.notifications = action.payload.notifications.map(
+          (notification) => {
+            if (notification.from_user.image) {
+              notification.from_user.image = `${FILE_URL}/storage/${notification.from_user.image}`;
+            }
+            return notification;
+          }
+        );
       })
       .addCase(removeNotification.pending, (state) => {
         state.handleNotificationLoading = true;
       })
-      .addCase(removeNotification.fulfilled, (state, action) => {
+      .addCase(removeNotification.fulfilled, (state) => {
         state.handleNotificationLoading = false;
-        console.log(action.payload);
       })
       .addCase(acceptNotification.pending, (state) => {
         state.handleNotificationLoading = true;
       })
-      .addCase(acceptNotification.fulfilled, (state, action) => {
+      .addCase(acceptNotification.fulfilled, (state) => {
         state.handleNotificationLoading = false;
-        console.log(action.payload);
       });
   },
 });
 
+export const {
+  addNotification,
+  clearNotification,
+  makeUserPending,
+  clearSearchUsers,
+} = userSlice.actions;
 export default userSlice.reducer;
