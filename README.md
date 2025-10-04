@@ -1,7 +1,7 @@
 # 💬 CHATME
 
 **CHATME** is a modern, real-time chat platform that enables seamless communication with friends and connections.  
-Add friends, create group chats, and enjoy smooth, instant messaging with a beautiful, responsive interface.
+Add friends, and enjoy smooth, instant messaging with a beautiful, responsive interface.
 
 ---
 
@@ -9,7 +9,6 @@ Add friends, create group chats, and enjoy smooth, instant messaging with a beau
 
 - **Real-time Messaging** — Instant delivery powered by WebSockets
 - **Friend System** — Add and manage your friends list
-- **Group Chats** — Conversations with multiple participants
 - **Modern UI** — Clean, responsive design for all devices
 - **Secure Authentication** — Protected accounts and user data
 
@@ -61,10 +60,7 @@ Add friends, create group chats, and enjoy smooth, instant messaging with a beau
 
 - Real-time chat powered by Laravel Reverb
 - Friend request management system
-- Group and private conversations
 - Persistent message history
-- Online/offline status tracking
 - Responsive and mobile-friendly UI
 - Laravel-based secure authentication
 - Smooth animations and transitions
-- Dark/Light mode support
