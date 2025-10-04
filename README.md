@@ -69,9 +69,9 @@ Add friends, and enjoy smooth, instant messaging with a beautiful, responsive in
 Check out a quick demo of CHATME in action:
 
 <p align="center">
-  <a href="https://youtu.be/B-XFcBjnkTNxA" target="_blank">
-    <img src="https://img.youtube.com/vi/B-XFcBjnkTNxA/hqdefault.jpg" alt="CHATME Demo Video" width="480" style="border-radius: 12px; box-shadow: 0 2px 8px #0002;"/>
+  <a href="https://www.youtube.com/watch?v=XFcBjnkTNxA" target="_blank">
+    <img src="https://img.youtube.com/vi/XFcBjnkTNxA/hqdefault.jpg" alt="CHATME Demo Video" width="480" style="border-radius: 12px; box-shadow: 0 2px 8px #0002;"/>
   </a>
 </p>
 
-[Watch on YouTube](https://www.youtube.com/watch?v=B-XFcBjnkTNxA)
+[Watch on YouTube](https://www.youtube.com/watch?v=XFcBjnkTNxA)
